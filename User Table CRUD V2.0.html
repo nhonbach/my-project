@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> User data crud</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- Import Datatable Library -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+  <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+</head>
+
+<body>
+<div class="container ">
+  <h2 class="text-center">F100 QUẢN TRỊ NGƯỜI DÙNG</h2>
+  <div class="container jumbotron row">
+    <div class="col-md-4 text-center">
+      <label for="role">Role</label>
+    </div>
+    <div class="col-md-4 text-center">
+      <select class="form-control" id="sel-role" >
+        <option value="">Chọn một role</option>
+      </select>
+    </div>
+    <div class="col-md-4 text-center">
+      <button class="btn form-control btn-success" id="btn-filter-user">Lọc Dữ Liệu</button>
+    </div>
+  </div>
+  <div class="container">
+    <button class="btn btn-info" id="btn-add-user">+ Thêm người dùng</button>
+  </div>
+  <div class="container">
+    <table class="table table-bordered table-striped table-hover" id="user-table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>User Name</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Email</th>
+          <th>Age</th>
+          <th>Role</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
+</div>
+<div>
+  <div id="user-modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content" style="width: 730px;">
+        <div class="modal-header">
+          <h2>F200-CẬP NHẬT DỮ LIỆU NGƯỜI DÙNG</h2>
+        </div>  
+        <div class="modal-body">
+          <div class="form-group row">
+            <div class="col-md-3 ">
+              <label for="">Username<span class="text-danger">(*)</span></label>
+            </div>
+            <div class="col-md-3 ">
+              <input type="text" class="form-control" id="inp-user-name">
+            </div>
+            <div class="col-md-3 ">
+              <label for="">Email<span class="text-danger">(*)</span></label>
+            </div>
+            <div class="col-md-3 ">
+              <input type="text" class="form-control" id="inp-email">
+            </div>
+          </div>
+          <div class="form-group row">
+            <div class="col-md-3 ">
+              <label for="">Firstname<span class="text-danger">(*)</span></label>
+            </div>
+            <div class="col-md-3">
+              <input type="text" class="form-control" id="inp-first-name">
+            </div>
+            <div class="col-md-3">
+              <label for="">Lastname<span class="text-danger">(*)</span></label>
+            </div>
+            <div class="col-md-3">
+              <input type="text" class="form-control" id="inp-last-name">
+            </div>
+          </div> 
+          <div class="form-group row">
+            <div class="col-md-3">
+              <label for="">Role<span class="text-danger">(*)</span></label>
+            </div>
+            <div class="col-md-3">
+              <select class="form-control" id="sel-modal-role">
+                <option value="">Chọn một role</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="">Age<span class="text-danger">(*)</span></label>
+            </div>
+            <div class="col-md-3">
+              <input type="text" class="form-control" id="inp-age">
+            </div>
+          </div> 
+          <div class="form-group text-right">
+              <button class="btn btn-danger" id="btn-cancel" data-dismiss="modal">Cancel</button>
+              <button class="btn btn-info" id="btn-save-data">Save data</button>
+          </div>      
+        </div>    
+      </div>
+    </div>
+  </div>
+  <!-- Delete confirm modal -->
+  <div>
+    <div class="modal fade" tabindex="-1" id="delete-confirm-modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="h5-modal-title">User Delete Confirmation</h5>
+            <button class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <label>Bạn có chắc chắn muốn xóa user này không?</label>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-danger" id="btn-confirm-delete-user">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+​<script>
+  /*** REGION 1 - Global variables - Vùng khai báo biến, hằng số, tham số TOÀN CỤC */
+  /* Mảng userObjects là mảng chứa dữ liệu user. Từng phần tử là object
+  * id: tự tăng lên 1. Ví dụ, hiện id lớn nhất là 6, thì khi thêm user mới, id sẽ là 7
+  */
+ "use strict";
+  var gUserObjects = [
+        {
+          id: 2,
+          username: "quannv",
+          firstname: "Ngo Van",
+          lastname: "Quan",
+          age: 18,
+          email: "quan@gmail.com",
+          roleId: 5
+        },
+        {
+          id: 3,
+          username: "longdh",
+          firstname: "Do Hoang",
+          lastname: "Long",
+          age: 19,
+          email: "long@gmail.com",
+          roleId: 8
+        },
+        {
+          id: 4,
+          username: "hiendt",
+          firstname: "Do Thi",
+          lastname: "Hien",
+          age: 29,
+          email: "hien@gmail.com",
+          roleId: 11
+        },
+        {
+          id: 6,
+          username: "lanht",
+          firstname: "Ho Thi",
+          lastname: "Lan",
+          age: 27,
+          email: "lan@gmail.com",
+          roleId: 13
+        }
+  ];
+
+// TODO: Điền tiếp các phần tử tiếp theo của mảng Role (xem trong slide task specification)
+  var gRoleObjects = [
+        {
+          roleId: 5,
+          roleName: "Admin" 
+        },
+        {
+          roleId: 8,
+          roleName: "Manager" 
+        },
+        {
+          roleId: 11,
+          roleName: "Teacher" 
+        },
+        {
+          roleId: 13,
+          roleName: "Staff" 
+        }
+  ];
+
+  var gFORM_MODE_NORMAL = "Normal";
+  var gFORM_MODE_INSERT = "Insert";
+  var gFORM_MODE_UPDATE = "Update";
+  var gFORM_MODE_DELETE = "Delete";
+  var gFormMode = gFORM_MODE_NORMAL;
+
+  var gNameCol = ["id","username","firstname","lastname","age","email","roleId","action"];
+  var gCOLUM_ID = 0;
+  var gCOLUM_USERNAME = 1;
+  var gCOLUM_FIRSTNAME = 2;
+  var gCOLUM_LASTNAME = 3;
+  var gCOLUM_AGE = 4;
+  var gCOLUM_EMAIL = 5;
+  var gCOLUM_ROLEID = 6;
+  var gCOLUM_ACTION = 7;
+
+  var gSTT = 0;
+
+  var gUserList = {};
+  var gUserId = 0;
+
+  var gUserTable = $("#user-table").DataTable({
+      columns:[
+        {data: gNameCol[gCOLUM_ID]},
+        {data: gNameCol[gCOLUM_USERNAME]},
+        {data: gNameCol[gCOLUM_FIRSTNAME]},
+        {data: gNameCol[gCOLUM_LASTNAME]},
+        {data: gNameCol[gCOLUM_AGE]},
+        {data: gNameCol[gCOLUM_EMAIL]},
+        {data: gNameCol[gCOLUM_ROLEID]},
+        {data: gNameCol[gCOLUM_ACTION]}
+      ],
+      columnDefs:[
+        {
+          targets: gCOLUM_ACTION,
+          defaultContent: `
+          <img class="edit-user" src="https://cdn0.iconfinder.com/data/icons/glyphpack/45/edit-alt-512.png" style="width: 20px;cursor:pointer;">
+          <img class="delete-user" src="https://cdn4.iconfinder.com/data/icons/complete-common-version-6-4/1024/trash-512.png" style="width: 20px;cursor:pointer;">
+        ` 
+        },
+        {
+          targets: gCOLUM_ID,
+          render: function(data){
+            gSTT++;
+            return gSTT;
+          }
+        },
+        {
+          targets: gCOLUM_ROLEID,
+          render: function(data){
+            for(let bI = 0; bI < gRoleObjects.length; bI++){
+              if( data == gRoleObjects[bI].roleId){
+                return gRoleObjects[bI].roleName;
+              }
+            }
+          }
+        }
+      ]
+    })
+  /*** REGION 2 - Vùng gán / thực thi sự kiện cho các elements */
+  onPageLoading();
+  $("#btn-filter-user").click(function(){
+    onBtnFilterClick();
+  });
+
+  $("#user-table").on("click", ".edit-user", function () {
+    onBtnIconEditClick(this);
+  });
+
+  $("#user-table").on("click", ".delete-user", function () {
+    onBtnIconDeleteClick(this);
+  });
+
+  $("#btn-confirm-delete-user").click(function(){
+    onBtnDeleteClick();
+  });
+
+  $("#btn-save-data").click(function(){
+    onBtnSaveDataClick();
+  });
+
+  $("#btn-add-user").on("click",function () {
+    onBtnAddDataClick();
+  });
+  
+  /*** REGION 3 - Event handlers - Vùng khai báo các hàm xử lý sự kiện */
+  //hàm load trang
+  function onPageLoading(){
+    loadRoleOption();    
+    loadDataTable(gUserObjects);
+  }      
+
+  //hàm lọc dữ liệu theo role
+  function onBtnFilterClick(){
+    "use strict";
+    //lấy giá trị ô sel
+    console.log($("#sel-role").val());
+    if($("#sel-role").val() == ""){
+      loadDataTable(gUserObjects);
+    }else{
+      gUserList.roleId  = parseInt($("#sel-role").val());
+      console.log(gUserObjects);
+      filterData(gUserList);
+    }
+    resetForm();
+  }
+
+  //hàm click icon edit
+  function onBtnIconEditClick(paramIndex){
+    "use strict";
+    gFormMode = gFORM_MODE_UPDATE;
+    $("#user-modal").modal("show");
+    gUserId = getIdDataFromButton(paramIndex);
+    console.log("ID: " + gUserId);
+    showDataModal(gUserId);
+  }
+
+  //hàm save data
+  function onBtnSaveDataClick(){
+    "use strict";
+    getFormData(gUserList);
+    var vIsValidate = validateData(gUserList);
+    if(vIsValidate){
+      saveUserData(gUserList);
+      loadDataTable(gUserObjects);
+      //thông báo
+      alert("Cập nhật dữ liệu thành công");
+      //reset dữ liệu
+      resetForm();
+      // ẩn modal form
+      $("#user-modal").modal("hide");
+ 
+    }
+  }
+
+  //hàm add new user
+  function onBtnAddDataClick(){
+    "use strict";
+    gFormMode = gFORM_MODE_INSERT;
+    $("#user-modal").modal("show");
+  }
+
+  //hàm ấn nút icon delete
+  function onBtnIconDeleteClick(paramIndex){
+    "use strict";
+    gFormMode = gFORM_MODE_DELETE;
+    gUserId = getIdDataFromButton(paramIndex);
+    $("#delete-confirm-modal").modal("show");
+  }
+
+  //hàm ấn nút xác nhận delete
+  function onBtnDeleteClick(paramIndex){
+    "use strict";
+    let vIndex = getIndexFormUserId(gUserId);
+    gUserObjects.splice(vIndex,1);
+    loadDataTable(gUserObjects);
+    alert("Xóa dữ liệu thành công");
+    $("#delete-confirm-modal").modal("hide");
+    resetForm();
+  }
+  /*** REGION 4 - Common funtions - Vùng khai báo hàm dùng chung trong toàn bộ chương trình*/
+  function loadRoleOption(){
+    "use strict";
+    $.each(gRoleObjects, function (i, item) {
+      $("select").append($('<option>', { 
+        value: item.roleId,
+        text : item.roleName 
+      }));
+    });
+  }
+
+  function loadDataTable(paramUserList){
+    "use strict";
+    gSTT = 0 ;
+    gUserTable.clear();
+    gUserTable.rows.add(paramUserList);
+    gUserTable.draw();
+  }
+
+  //hàm kiểm tra dữ liệu ô sel
+  function validateData(paramUser){
+    "use strict";
+      if (isExistUserName(paramUser.username)) {
+        alert("Username bị trùng");
+        return false;
+      }
+      if (isExistEmail(paramUser.email)) {
+        alert("Email bị trùng");
+        return false;
+      }
+      if(paramUser.username === ""){
+        alert("Xin nhập username");
+        return false;
+      }
+      if(!paramUser.email.includes("@")){
+        alert("Email không hợp lệ");
+        return false;
+      }
+      if(paramUser.firstname === ""){
+        alert("Xin nhập firstname");
+        return false;
+      }
+      if(paramUser.lastname === ""){
+        alert("Xin nhập lastname");
+        return false;
+      }
+      if(isNaN(paramUser.age)){
+        alert("Age không hợp lệ");
+        return false;
+      }
+      if(paramUser.roleId === ""){
+        alert("Xin chọn một role");
+        return false;
+      }
+    return true;
+  }
+
+  // hàm kiểm tra trùng username
+  function isExistUserName(paramData) {
+    "use strict";
+    var vFound = false;
+    var vIndex = 0;
+    if (gFormMode ===  gFORM_MODE_INSERT) {//thêm mới => không được phép trùng với cái đã có
+      while (!vFound && vIndex < gUserObjects.length) {
+        if (gUserObjects[vIndex].username === paramData) {
+          vFound = true;          
+        } else {
+          vIndex ++;
+        }
+      }
+    } else {//sửa => không được phép trùng với những dòng khác và được phép trùng với dòng hiện tại (không sửa mã, chỉ sửa discount)
+      if (gUserObjects[vIndex].username === paramData && gUserObjects[vIndex].id != gUserId) {
+          vFound = true;          
+        } else {
+          vIndex ++;
+        }
+    }
+    return vFound;
+  }
+
+  // hàm kiểm tra trùng email
+  function isExistEmail(paramData) {
+    "use strict";
+    var vFound = false;
+    var vIndex = 0;
+    if (gFormMode ===  gFORM_MODE_INSERT) {//thêm mới => không được phép trùng với cái đã có
+      while (!vFound && vIndex < gUserObjects.length) {
+        if (gUserObjects[vIndex].email === paramData) {
+          vFound = true;          
+        } else {
+          vIndex ++;
+        }
+      }
+    } else {//sửa => không được phép trùng với những dòng khác và được phép trùng với dòng hiện tại (không sửa mã, chỉ sửa discount)
+      if (gUserObjects[vIndex].email === paramData && gUserObjects[vIndex].id != gUserId) {
+          vFound = true;          
+        } else {
+          vIndex ++;
+        }
+    }
+    return vFound;
+  }
+
+  function filterData(paramUser){
+    "use strict";
+    let vFindUser = gUserObjects.filter(function(user){
+      return user.roleId === paramUser.roleId;
+    });
+    resetForm();
+    loadDataTable(vFindUser);
+  }
+
+  // hàm dựa vào button detail (edit or delete) xác định đc id user
+  function getIdDataFromButton(paramIcon) {
+    var vTableRow = $(paramIcon).parents("tr");
+    var vUserRowData = gUserTable.row(vTableRow).data();
+    return vUserRowData.id;
+  }
+
+  //hàm hiển thị data lên modal
+  function showDataModal(paramUser){
+    "use strict";
+    let vIndex = getIndexFormUserId(paramUser);
+    $("#inp-user-name").val(gUserObjects[vIndex].username);
+    $("#inp-first-name").val(gUserObjects[vIndex].firstname);
+    $("#inp-last-name").val(gUserObjects[vIndex].lastname);
+    $("#inp-age").val(gUserObjects[vIndex].age);
+    $("#inp-email").val(gUserObjects[vIndex].email);
+    $("#sel-modal-role").val(gUserObjects[vIndex].roleId);
+  }
+
+
+  //hàm lấy index của id
+  function getIndexFormUserId(paramUserId) {
+    "use strict";
+    var vUserIndex = -1;
+    var vUserFound = false;
+    var vLoopIndex = 0;
+    while(!vUserFound && vLoopIndex < gUserObjects.length) {
+      if(gUserObjects[vLoopIndex].id === paramUserId) {
+        vUserIndex = vLoopIndex;
+        vUserFound = true;
+      }
+      else {
+        vLoopIndex ++;
+      }
+    }
+    return vUserIndex;
+  }
+
+  //hàm thu thập dữ liệu form
+  function getFormData(paramUser){
+    "use strict";
+    if(gFormMode == gFORM_MODE_INSERT){
+      paramUser.id = getNewId();
+    }else{
+      paramUser.id = gUserId;
+    }
+    paramUser.username = $("#inp-user-name").val().trim();
+    paramUser.firstname = $("#inp-first-name").val().trim();
+    paramUser.lastname = $("#inp-last-name").val().trim();
+    paramUser.age = parseInt($("#inp-age").val().trim());
+    paramUser.email = $("#inp-email").val().trim();
+    paramUser.roleId = parseInt($("#sel-modal-role").val());
+  }
+
+  // hàm lấy ra đc id user tiếp theo, dùng khi thêm mới user
+  function getNewId() {
+    "use strict";
+    var vNextId = 0;
+    // nếu mảng chưa có phần tử nào, thì id sẽ bắt đầu từ 1
+    if(gUserObjects.length == 0) {
+      vNextId = 1;
+    }
+    else { // id tiếp theo bằng id của phần tử cuối cùng cộng thêm 1
+      vNextId = gUserObjects[gUserObjects.length - 1].id + 1;
+    }
+    return vNextId;
+  }
+
+  //hàm save dữ liệu khi update data
+  function saveUserData(paramUser){
+    "use strict";
+    if(gFormMode === gFORM_MODE_INSERT){
+      gUserObjects.push(paramUser);
+    }else{
+      var vUserIndex = getIndexFormUserId(paramUser.id);
+      gUserObjects.splice(vUserIndex, 1 , paramUser);
+    }
+  }
+
+  //hàm reset form
+  function resetForm(){
+    gSTT = 0;
+    gUserId = 0;
+    gFormMode = gFORM_MODE_NORMAL;
+    gUserList = {};
+    $("#inp-user-name").val("");
+    $("#inp-email").val("");
+    $("#inp-first-name").val("");
+    $("#inp-last-name").val("");
+    $("#inp-age").val("");
+    $("#sel-modal-role").val("");
+  }
+
+</script>
+</body>
+</html>
